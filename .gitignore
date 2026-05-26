@@ -1,30 +1,48 @@
-```
+```gitignore
 # Dependencies
 node_modules/
 
 # Build artifacts
 dist/
+build/
+target/
 
-# Environment
-.env
-.env.local
-.env.*
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.python-version
+.pytest_cache/
+.mypy_cache/
+.coverage
 
 # Logs
 *.log
 
-# Editor/IDE
+# Environment specific
+.env
+.env.local
+*.env
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*.tmp
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Package manager
-package-lock.json
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
+# Coverage
+coverage/
+htmlcov/
+.coverage
 ```
