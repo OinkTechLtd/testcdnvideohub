@@ -1,18 +1,18 @@
 {
-  "name": "coder-pawno",
+  "name": "server",
   "version": "1.0.0",
-  "description": "Modern web-based code editor inspired by VSCode and Pawno with Russian language support",
+  "main": "server.js",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd server && node server.js",
-    "client": "cd client && npm run dev",
-    "build": "cd client && npm run build",
-    "start": "cd server && node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
-  "keywords": ["pawno", "vscode", "editor", "compiler", "samp"],
-  "author": "Coder-Pawno Team",
-  "license": "MIT",
-  "devDependencies": {
-    "concurrently": "^8.2.0"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "ws": "^8.21.0"
   }
 }
