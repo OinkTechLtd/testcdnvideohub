@@ -4,13 +4,22 @@ class Compiler {
     const errors = [];
     const warnings = [];
 
+    // Clean the code from any BOM or invalid characters
+    let cleanCode = code;
+    // Remove BOM (Byte Order Mark)
+    if (cleanCode.charCodeAt(0) === 0xFEFF) {
+      cleanCode = cleanCode.slice(1);
+    }
+    // Remove any null bytes and other control characters that might cause issues
+    cleanCode = cleanCode.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    
     output.push('Pawn compiler version 3.2.3664');
     output.push('Copyright (c) 1997-2006, ITB CompuPhase');
     output.push('');
     output.push('Parsing...');
-
+    
     // Basic syntax checking - exactly like Pawno
-    const lines = code.split('\n');
+    const lines = cleanCode.split('\n');
     let hasMain = false;
     let braceCount = 0;
     let parenCount = 0;
@@ -156,7 +165,7 @@ class Compiler {
     output.push('Creating output file: compiled.amx');
     output.push('Compilation completed successfully!');
     output.push(`Total lines: ${lines.length}`);
-    output.push(`Code size: ~${Math.floor(code.length / 10)} bytes`);
+    output.push(`Code size: ~${Math.floor(cleanCode.length / 10)} bytes`);
     output.push(`Functions defined: ${definedFunctions.size}`);
     output.push(`Variables declared: ${variables.size}`);
 

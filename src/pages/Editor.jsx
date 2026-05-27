@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FolderOpen, Download, Play, Settings, Bell, X, Maximize2,
+  FolderOpen, Download, Play, Bell, X, Maximize2,
   FileCode, ChevronRight, ChevronDown, Menu, Volume2, VolumeX,
-  Monitor, Smartphone, AlertCircle, Send, Upload, Archive
+  Monitor, Smartphone, AlertCircle, Send, Upload, Archive,
+  Search, FileText, Settings
 } from 'lucide-react';
 import JSZip from 'jszip';
 import PushNotification from '../components/PushNotification';
@@ -27,6 +28,8 @@ const EditorPage = () => {
   const [ws, setWs] = useState(null);
   const [pushLogs, setPushLogs] = useState([]);
   const [adminMessage, setAdminMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [projectName, setProjectName] = useState('');
   const editorRef = useRef(null);
 
   // Push notification on mount
@@ -149,6 +152,10 @@ const EditorPage = () => {
         setCode(content);
         setCurrentFile(file.name);
         setFiles(prev => [...prev, { name: file.name, content }]);
+        // Set project name from first loaded file
+        if (!projectName) {
+          setProjectName(file.name.replace(/\.[^/.]+$/, ''));
+        }
         addNotification(`Файл ${file.name} загружен`, 'success');
         if (soundEnabled) playSound('startup');
       }
@@ -195,7 +202,9 @@ const EditorPage = () => {
           if (!supportedExts.includes(ext)) return;
 
           try {
-            const content = await zipFile.async('text');
+            const content = await zipFile.async('text', {
+              decoder: new TextDecoder('utf-8', { fatal: false })
+            });
             loadedFiles.push({ name: filename, content });
 
             // Look for main file (.pwn for Pawno, .js for JS, etc.)
@@ -234,6 +243,9 @@ const EditorPage = () => {
           addNotification(`Проект загружен: ${loadedFiles.length} файл(ов)`, 'success');
         }
 
+        // Set project name from zip file
+        setProjectName(file.name.replace(/\.[^/.]+$/, ''));
+
         if (soundEnabled) playSound('startup');
       } catch (error) {
         console.error('Error loading ZIP:', error);
@@ -247,16 +259,40 @@ const EditorPage = () => {
   };
 
   const downloadProject = () => {
-    const blob = new Blob([code], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = currentFile || 'project.pwn';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    addNotification('Проект скачан', 'success');
+    if (files.length > 1) {
+      // Download all files as ZIP
+      const zip = new JSZip();
+      
+      // Add all files to zip
+      files.forEach(file => {
+        zip.file(file.name, file.content);
+      });
+      
+      // Generate and download zip
+      zip.generateAsync({ type: 'blob' }).then(content => {
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${projectName || 'project'}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        addNotification(`Проект скачан как ${projectName || 'project'}.zip`, 'success');
+      });
+    } else {
+      // Download single file
+      const blob = new Blob([code], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = currentFile || `${projectName || 'project'}.pwn`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      addNotification('Файл скачан', 'success');
+    }
     if (soundEnabled) playSound('compile');
   };
 
@@ -527,6 +563,33 @@ const EditorPage = () => {
             }}
           >
             <div style={{ padding: '16px' }}>
+              {/* Project Name Display */}
+              {projectName && (
+                <div style={{
+                  marginBottom: '12px',
+                  padding: '8px 12px',
+                  background: 'rgba(102, 126, 234, 0.15)',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(102, 126, 234, 0.3)'
+                }}>
+                  <div style={{
+                    fontSize: '11px',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    marginBottom: '4px'
+                  }}>
+                    ПРОЕКТ
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#667eea',
+                    wordBreak: 'break-all'
+                  }}>
+                    {projectName}
+                  </div>
+                </div>
+              )}
+
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -537,7 +600,7 @@ const EditorPage = () => {
                 fontWeight: '600'
               }}>
                 <FolderOpen size={18} />
-                ПРОЕКТ
+                ФАЙЛЫ
               </div>
 
               <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
@@ -568,9 +631,49 @@ const EditorPage = () => {
                 Скачать проект
               </button>
 
+              {/* Search Files */}
               {files.length > 0 && (
-                <div>
-                  {files.map((file, index) => (
+                <div style={{
+                  position: 'relative',
+                  marginBottom: '12px'
+                }}>
+                  <Search 
+                    size={16} 
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: 'rgba(255, 255, 255, 0.4)'
+                    }} 
+                  />
+                  <input
+                    type="text"
+                    placeholder="Поиск файлов..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px 8px 36px',
+                      background: '#3c3c3c',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '6px',
+                      color: 'white',
+                      fontSize: '13px',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+              )}
+
+              {files.length > 0 && (
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  {files
+                    .filter(file => file.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map((file, index) => (
                     <div
                       key={index}
                       onClick={() => {
@@ -589,10 +692,20 @@ const EditorPage = () => {
                         fontSize: '14px'
                       }}
                     >
-                      <FileCode size={16} />
+                      <FileText size={16} />
                       {file.name}
                     </div>
                   ))}
+                  {files.filter(file => file.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                    <div style={{
+                      padding: '12px',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      fontSize: '13px'
+                    }}>
+                      Файлы не найдены
+                    </div>
+                  )}
                 </div>
               )}
             </div>
