@@ -202,9 +202,7 @@ const EditorPage = () => {
           if (!supportedExts.includes(ext)) return;
 
           try {
-            const content = await zipFile.async('text', {
-              decoder: new TextDecoder('utf-8', { fatal: false })
-            });
+            const content = await zipFile.async('text');
             loadedFiles.push({ name: filename, content });
 
             // Look for main file (.pwn for Pawno, .js for JS, etc.)
