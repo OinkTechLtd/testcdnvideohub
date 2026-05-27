@@ -5,7 +5,7 @@ import {
   FolderOpen, Download, Play, Bell, X, Maximize2,
   FileCode, ChevronRight, ChevronDown, Menu, Volume2, VolumeX,
   Monitor, Smartphone, AlertCircle, Send, Upload, Archive,
-  Search, FileText, Settings
+  Search, FileText, Settings, Minimize2
 } from 'lucide-react';
 import JSZip from 'jszip';
 import PushNotification from '../components/PushNotification';
@@ -30,6 +30,8 @@ const EditorPage = () => {
   const [adminMessage, setAdminMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [projectName, setProjectName] = useState('');
+  const [showOutputPanel, setShowOutputPanel] = useState(true);
+  const [outputHeight, setOutputHeight] = useState(40);
   const editorRef = useRef(null);
 
   // Push notification on mount
@@ -297,6 +299,7 @@ const EditorPage = () => {
   const compileCode = async () => {
     setIsCompiling(true);
     setCompilerOutput([]);
+    setShowOutputPanel(true);
     
     if (soundEnabled) playSound('compile');
     
@@ -327,6 +330,10 @@ const EditorPage = () => {
     }
     
     setIsCompiling(false);
+  };
+
+  const toggleOutputPanel = () => {
+    setShowOutputPanel(!showOutputPanel);
   };
 
   const toggleFullscreen = () => {
@@ -810,7 +817,7 @@ const EditorPage = () => {
         {/* Editor Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Editor
-            height="60%"
+            height={showOutputPanel ? `${100 - outputHeight}%` : '100%'}
             theme="vs-dark"
             language={language === 'pawno' ? 'java' : language}
             value={code}
@@ -822,54 +829,104 @@ const EditorPage = () => {
               lineNumbers: 'on',
               scrollBeyondLastLine: false,
               automaticLayout: true,
-              tabSize: 4
+              tabSize: 4,
+              wordWrap: 'on'
             }}
           />
 
           {/* Output Panel */}
-          <div style={{
-            height: '40%',
-            background: '#1e1e1e',
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
+          {showOutputPanel && (
             <div style={{
+              height: `${outputHeight}%`,
+              background: '#1e1e1e',
+              borderTop: '1px solid rgba(255, 255, 255, 0.1)',
               display: 'flex',
-              alignItems: 'center',
-              padding: '12px 16px',
-              background: '#252526',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              flexDirection: 'column',
+              position: 'relative'
             }}>
-              <ChevronDown size={18} style={{ marginRight: '8px', color: 'rgba(255, 255, 255, 0.5)' }} />
-              <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', fontWeight: '600' }}>
-                КОНСОЛЬ КОМПИЛЯТОРА
-              </span>
-            </div>
-            <div style={{
-              flex: 1,
-              padding: '16px',
-              fontFamily: 'Consolas, Monaco, monospace',
-              fontSize: '13px',
-              overflow: 'auto',
-              color: 'rgba(255, 255, 255, 0.7)'
-            }}>
-              {compilerOutput.length > 0 ? (
-                compilerOutput.map((line, index) => (
-                  <div key={index} style={{ 
-                    marginBottom: '4px',
-                    color: line.includes('Error') ? '#ef4444' : line.includes('Warning') ? '#f59e0b' : 'rgba(255, 255, 255, 0.7)'
-                  }}>
-                    {line}
-                  </div>
-                ))
-              ) : (
-                <div style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
-                  Нажмите "Компилировать" для запуска компиляции...
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                background: '#252526',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ChevronDown size={18} style={{ color: 'rgba(255, 255, 255, 0.5)' }} />
+                  <span style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', fontWeight: '600' }}>
+                    КОНСОЛЬ КОМПИЛЯТОРА
+                  </span>
                 </div>
-              )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    onClick={() => setShowOutputPanel(false)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    title="Закрыть панель"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              <div style={{
+                flex: 1,
+                padding: '16px',
+                fontFamily: 'Consolas, Monaco, monospace',
+                fontSize: '13px',
+                overflow: 'auto',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                {compilerOutput.length > 0 ? (
+                  compilerOutput.map((line, index) => (
+                    <div key={index} style={{ 
+                      marginBottom: '4px',
+                      color: line.includes('Error') || line.includes('error') ? '#ef4444' : line.includes('Warning') ? '#f59e0b' : 'rgba(255, 255, 255, 0.7)'
+                    }}>
+                      {line}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ color: 'rgba(255, 255, 255, 0.3)' }}>
+                    Нажмите "Компилировать" для запуска компиляции...
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          
+          {!showOutputPanel && (
+            <button
+              onClick={() => setShowOutputPanel(true)}
+              style={{
+                position: 'absolute',
+                bottom: '60px',
+                right: '20px',
+                background: '#252526',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                zIndex: 100
+              }}
+            >
+              <ChevronDown size={16} />
+              Консоль
+            </button>
+          )}
         </div>
       </div>
 

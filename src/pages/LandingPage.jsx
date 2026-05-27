@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Code2, Zap, Globe, Shield, ChevronRight, Sparkles } from 'lucide-react';
+import { Code2, Zap, Globe, Shield, ChevronRight, Sparkles, Menu, X } from 'lucide-react';
 
 const LandingPage = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const features = [
     {
       icon: <Code2 size={32} />,
@@ -38,7 +40,8 @@ const LandingPage = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        position: 'relative'
       }}>
         <div style={{
           fontSize: '28px',
@@ -49,11 +52,68 @@ const LandingPage = () => {
         }}>
           Coder-Pawno
         </div>
-        <Link to="/editor">
-          <button className="btn-primary">
-            Начать работу
-          </button>
-        </Link>
+        
+        {/* Desktop Menu */}
+        <div className="hidden md:block">
+          <Link to="/editor">
+            <button className="btn-primary">
+              Начать работу
+            </button>
+          </Link>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: 'rgba(26, 26, 46, 0.98)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '20px',
+              zIndex: 1000
+            }}
+          >
+            <Link to="/editor" onClick={() => setMobileMenuOpen(false)}>
+              <button 
+                className="btn-primary"
+                style={{ width: '100%', marginBottom: '12px' }}
+              >
+                Начать работу
+              </button>
+            </Link>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)}>
+              <button 
+                className="btn-secondary"
+                style={{ width: '100%' }}
+              >
+                Узнать больше
+              </button>
+            </a>
+          </motion.div>
+        )}
       </header>
 
       {/* Hero Section */}
@@ -133,7 +193,7 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <section id="features" style={{
-        padding: '100px 40px',
+        padding: '100px 20px',
         background: 'rgba(255, 255, 255, 0.02)'
       }}>
         <div style={{
@@ -149,7 +209,8 @@ const LandingPage = () => {
               fontWeight: 'bold',
               textAlign: 'center',
               marginBottom: '60px',
-              color: 'white'
+              color: 'white',
+              padding: '0 20px'
             }}
           >
             Почему выбирают <span className="gradient-text">Coder-Pawno</span>?
@@ -204,7 +265,7 @@ const LandingPage = () => {
 
       {/* CTA Section */}
       <section style={{
-        padding: '100px 40px',
+        padding: '100px 20px',
         textAlign: 'center'
       }}>
         <motion.div
@@ -222,14 +283,16 @@ const LandingPage = () => {
             fontSize: 'clamp(28px, 5vw, 40px)',
             fontWeight: 'bold',
             marginBottom: '16px',
-            color: 'white'
+            color: 'white',
+            padding: '0 20px'
           }}>
             Готовы начать?
           </h2>
           <p style={{
             fontSize: '18px',
             color: 'rgba(255, 255, 255, 0.7)',
-            marginBottom: '32px'
+            marginBottom: '32px',
+            padding: '0 20px'
           }}>
             Присоединяйтесь к тысячам разработчиков уже сегодня
           </p>
@@ -246,7 +309,7 @@ const LandingPage = () => {
 
       {/* Footer */}
       <footer style={{
-        padding: '40px',
+        padding: '40px 20px',
         borderTop: '1px solid rgba(255, 255, 255, 0.1)',
         textAlign: 'center',
         color: 'rgba(255, 255, 255, 0.5)'
